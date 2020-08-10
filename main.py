@@ -52,6 +52,7 @@ def main(num_plates):
         reg1 = Region(1)
         reg2 = Region(2)
         reg3 = Region(3)
+        steps = 0
         game_end = False
         game_started = False
         n = 0
@@ -69,8 +70,8 @@ def main(num_plates):
                 w = np.flip(np.arange(min_w, max_w, w_diff / n, dtype=int))[i]
                 if i > 0:
                     x = x + (w_diff / n) - (w_diff / (n * 2))
-
                 p = pygame.Rect((x, y), (w, h))
+                p.centerx = self.reg1.range.centerx
                 list_plates.append(p)
 
         def get_region(self, coor):
@@ -86,6 +87,8 @@ def main(num_plates):
     h = HanoiGame(num_plates)
     while run:
         n = h.n
+        min_steps = 2**n - 1
+
         if h.reg1.get_rects() != list_plates:
             h.game_started = True
         for event in pygame.event.get():
@@ -99,8 +102,8 @@ def main(num_plates):
                 if event.key == pygame.K_ESCAPE:
                     run = False
                 elif not h.game_started and int(pygame.key.name(event.key)):
-                    print("new game")
                     main(int(pygame.key.name(event.key)))
+                    break
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
@@ -115,8 +118,10 @@ def main(num_plates):
                         if playrect.collidepoint(event.pos):
                             if event.pos[0] > 365:
                                 main(num_plates)
+                                break
                             else:
                                 run = False
+                                break
 
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:
@@ -127,12 +132,14 @@ def main(num_plates):
                         rect.centerx = x_middle
                         rect.y = region.get_height()
                         selected = None
+                        h.steps = h.steps + 1
 
             elif event.type == pygame.MOUSEMOTION:
                 if selected is not None:  # selected can be `0` so `is not None` is required
                     # move object
                     selected.x = event.pos[0] + selected_offset_x
                     selected.y = event.pos[1] + selected_offset_y
+
 
             # --- objects events ---
 
@@ -165,10 +172,26 @@ def main(num_plates):
         button.draw(screen)    
         '''
 
+        # STEP COUNTER
+
+        font = pygame.font.Font('freesansbold.ttf', 20)
+        text = font.render("Steps: " + str(h.steps), True, (242, 142, 70))
+        textRect = text.get_rect()
+        screen.blit(text, textRect)
+        f = pygame.font.Font('freesansbold.ttf', 17)
+        text = f.render("Min steps: " + str(min_steps), True, (212, 124, 61))
+        textRect = text.get_rect()
+        textRect.centery = textRect.centery + 20
+        screen.blit(text, textRect)
+
         # draw rects
         for ind in range(len(list_plates)):
-            colr = pygame.color.Color(255, 255, 102)
-            dark_colr = pygame.color.Color(16, 145, 140)
+            # colr = pygame.color.Color(255, 255, 102)
+            # dark_colr = pygame.color.Color(16, 145, 140)
+            colr = pygame.color.Color(230, 228, 96)
+            dark_colr = pygame.color.Color(235, 64, 52)
+            # colr = pygame.color.Color(165, 96, 230)
+            # dark_colr = pygame.color.Color(65, 19, 110)
             r = int(np.arange(dark_colr.r, colr.r, (colr.r - dark_colr.r) / n, dtype=int)[ind])
             g = int(np.arange(dark_colr.g, colr.g, (colr.g - dark_colr.g) / n, dtype=int)[ind])
             b = int(np.arange(dark_colr.b, colr.b, (colr.b - dark_colr.b) / n, dtype=int)[ind])
